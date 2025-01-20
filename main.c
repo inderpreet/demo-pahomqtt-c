@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ADDRESS     "tcp://broker.hivemq.com:1883"
+#define ADDRESS     "tcp://192.168.2.75:1883"
 #define CLIENTID    "ExampleClientSub"
 #define TOPIC       "MQTT_TEST"
 #define PAYLOAD     "Hello World!"
@@ -46,18 +46,32 @@ void connlost(void *context, char *cause)
     printf("     cause: %s\n", cause);
 }
 
+void onConnected(void)
+{
+    printf("\nConnected!");
+}
 
-int main() {
-    printf("Hello world\n");
+void onFailedConnection(void)
+{
+    printf("\nConnection Failed");
+}
+
+int mqtt_demo1(void)
+{
     MQTTClient client;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     int rc;
     int ch;
-    MQTTClient_create(&client, ADDRESS, CLIENTID,
-        MQTTCLIENT_PERSISTENCE_NONE, NULL);
+
+    rc = MQTTClient_create(&client, ADDRESS, CLIENTID, MQTTCLIENT_PERSISTENCE_NONE, NULL);
     conn_opts.keepAliveInterval = 20;
     conn_opts.cleansession = 1;
-    MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+    
+    conn_opts.username = "manager";
+    conn_opts.password = "SuperUser$123";
+
+    rc = MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered);
+
     if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS)
     {
         printf("Failed to connect, return code %d\n", rc);
@@ -73,7 +87,12 @@ int main() {
     MQTTClient_disconnect(client, 10000);
     MQTTClient_destroy(&client);
     return rc;
+}
+
+
+int main() {
+    printf("Hello world\n");
+    mqtt_demo1();
  
     return 0;
 }
-
